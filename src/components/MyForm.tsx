@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { socket } from '../socket';
 
 export function MyForm() {
-  const [value, setValue] = useState('');
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_value, setValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -10,7 +11,7 @@ export function MyForm() {
     event.preventDefault();
     setIsLoading(true);
 
-    socket.timeout(5000).emit('create-something', value, () => {
+    socket.timeout(5000).emit('create-something', { name: "Navneet" }, () => {
       setIsLoading(false);
     });
   }
