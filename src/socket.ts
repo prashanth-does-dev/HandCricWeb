@@ -5,7 +5,7 @@ const URL = 'http://localhost:3000';
 
 export const socket = io(URL, {
     auth: {
-        token: localStorage.getItem("player")
+        token: localStorage.getItem("gjwt")
     },
     autoConnect: false
 });

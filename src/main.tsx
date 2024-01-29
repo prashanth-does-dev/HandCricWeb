@@ -1,18 +1,20 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import "./index.css";
-import App from "./App";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import MainRouter from "./MainRouter";
 
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: <App />
-  },
-]);
+const queryClient = new QueryClient();
+
+const clientID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <RouterProvider router={router} />
+    <GoogleOAuthProvider clientId={clientID}>
+      <QueryClientProvider client={queryClient}>
+        <MainRouter />
+      </QueryClientProvider>
+    </GoogleOAuthProvider>
   </React.StrictMode>
 );

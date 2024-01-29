@@ -1,20 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect } from "react";
-import { useAtom } from "jotai";
+import { useAtom, useSetAtom } from "jotai";
 import { socket } from "./socket";
 import Container from "./components/common/Container";
 import {
   joinedRoomIdAtom,
-  playerAtom,
+  userAtom,
   playersInRoom,
-  roomIdAtom,
+  User,
 } from "./states/global";
+import { useNavigate } from "react-router-dom";
 
 export default function App() {
-  const [player, setPlayer] = useAtom(playerAtom);
-  const [players, setPlayers] = useAtom(playersInRoom);
-  const [roomId, setRoomId] = useAtom(roomIdAtom);
+  const [user] = useAtom(userAtom);
+  const navigate = useNavigate();
   const [joinedRoomId, setJoinedRoomId] = useAtom(joinedRoomIdAtom);
+  const setPlayersInRoom = useSetAtom(playersInRoom);
 
   console.log("socket connection active", socket.connected);
 
@@ -30,15 +31,12 @@ export default function App() {
     socket.on("connect", onConnect);
     socket.on("disconnect", onDisconnect);
 
-    socket.on("new-room", (data: string) => {
-      setRoomId(data);
-    });
-
     socket.on(
       "joined-room",
-      (data: { joinedPlayers: string[]; roomId: string }) => {
+      (data: { joinedPlayers: User[]; roomId: string }) => {
         setJoinedRoomId(data.roomId);
-        setPlayers(data.joinedPlayers);
+        setPlayersInRoom(data.joinedPlayers);
+        navigate("/room/" + data.roomId);
       }
     );
 
@@ -49,24 +47,22 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleNameChange = (e: any) => {
-    setPlayer(e.target.value);
-  };
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const HandleJoinRoom = (e: any) => {
     e.preventDefault();
     const roomId = e.target["room_id"].value;
 
-    if (!player || !roomId) {
-      alert("Player name/Room Id is needed");
+    if (!roomId) {
+      alert("Room Id is needed");
       return;
     }
 
     if (socket.connected === false) {
-      socket.connect().emit("join-room", { roomId, playerName: player });
+      socket
+        .connect()
+        .emit("join-room", { roomId, playerName: user?.username });
     } else {
-      socket.emit("join-room", { roomId, playerName: player });
+      socket.emit("join-room", { roomId, playerName: user?.username });
     }
   };
 
@@ -79,27 +75,16 @@ export default function App() {
       <h1 className="text-3xl font-bold text-center">
         Welcome to Hand Cricket 🏏
       </h1>
-
-      <h2>Joined Room: {joinedRoomId}</h2>
       <div>
-        <h3>Player: {player}</h3>
-        <h3>Players Joined: {JSON.stringify(players)}</h3>
-
-        <input
-          onChange={handleNameChange}
-          placeholder="Name"
-          type="text"
-          name="player-name"
-          id="player"
-          className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-        />
+        <img src={user?.profile_image} height={100} width={100} />
+        <h3>Player: {user?.username}</h3>
         <button
           className="border-2 p-2 border-violet-500"
           onClick={HandleCreateRoom}
         >
           Create Room
         </button>
-        {roomId && <p>Created Room id: {roomId}</p>}
+
 
         <form onSubmit={HandleJoinRoom}>
           <input
@@ -109,18 +94,13 @@ export default function App() {
             id="room_id"
             className="block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
           />
-          <button
-            type="submit"
-            className="border-2 p-2 border-violet-500"
-          >
+          <button type="submit" className="border-2 p-2 border-violet-500">
             Join Room
           </button>
         </form>
 
         {joinedRoomId && joinedRoomId.length > 1 && (
-          <button className="border-2 p-2 border-violet-500">
-            Start Game
-          </button>
+          <button className="border-2 p-2 border-violet-500">Start Game</button>
         )}
       </div>
     </Container>
