@@ -7,5 +7,5 @@ export const socket = io(URL, {
     auth: {
         token: localStorage.getItem("gjwt")
     },
-    autoConnect: false
+    autoConnect: true
 });
